@@ -66,7 +66,7 @@ void getInfo( void )
     }else
     {
         printf(" -- Warning: No CUDA Device Detected :'( -- \n");
-        printf(" -- This software might not operate as   -- \n -- Expected.")
+        printf(" -- This software might not operate as   -- \n -- Expected.                            -- \n")
     }
 
 
