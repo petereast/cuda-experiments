@@ -5,7 +5,7 @@
 void getInfo( void );
 
 // Let's do a basic CAESAR shift cipher, implemented in CUDA
-__global__ void caeasrCipher(char *key, char *text, int tlength, int klength);
+__global__ void caesarCipher(char *key, char *text, int tlength, int klength);
 
 
 int main( void ){
@@ -23,7 +23,7 @@ int main( void ){
     cudaMemcpy( dev_key, key, strlen(key)*sizeof(char), cudaMemcpyHostToDevice);
     cudaMemcpy( dev_text, text, (strlen(text)+1)*sizeof(char), cudaMemcpyHostToDevice);
     printf("Key: %s(%d)\nText: '%s'(%d)\n", key, strlen(key), text, strlen(text));
-    caeasrCipher<<<1024, 1>>>(dev_key, dev_text, strlen(text), strlen(key));
+    caesarCipher<<<1024, 1>>>(dev_key, dev_text, strlen(text), strlen(key));
 
     cudaMemcpy(text, dev_text, (strlen(text)+1)*sizeof(char), cudaMemcpyDeviceToHost);
 
@@ -36,7 +36,7 @@ int main( void ){
     return 0;
 }
 
-__global__ void caeasrCipher(char *key, char *text, int tlength, int klength)
+__global__ void caesarCipher(char *key, char *text, int tlength, int klength)
 {
     int tid = blockIdx.x;
     if (tid < tlength)
@@ -57,15 +57,16 @@ void getInfo( void )
     if(capability)
     {
         cudaGetDeviceProperties( &p, 0);
-        printf(" -- Information & Properties about CUDA device 0 -- \n");
+        printf(" -- Information & Properties about CUDA device 0 -- \n\n");
         printf("\tCompute Capability: %i.%i\n", p.major, p.minor);
         printf("\tDevice Name: %s\n", p.name);
         printf("\tClock Rate: %d\n", p.clockRate);
         printf("\tGlobal Memory: %dMiB\n", p.totalGlobalMem/(1024*1024));
-        printf(" -- End of Information -- \n");
+        printf("\n -- End of Information -- \n");
     }else
     {
         printf(" -- Warning: No CUDA Device Detected :'( -- \n");
+        printf(" -- This software might not operate as   -- \n -- Expected.")
     }
 
 
