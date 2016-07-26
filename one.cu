@@ -5,13 +5,23 @@ void getInfo( void )
 {
     cudaDeviceProp p;
 
-    cudaGetDeviceProperties( &p, 0);
-    printf(" -- Information & Properties about CUDA device 0 -- \n");
-    printf("\tCompute Capability: %i.%i\n", p.major, p.minor);
-    printf("\tDevice Name: %s\n", p.name);
-    printf("\tClock Rate: %d\n", p.clockRate);
-    printf("\tGlobal Memory: %dMiB\n", p.totalGlobalMem/(1024*1024));
-    printf(" -- End of Information -- \n");
+    int capability = p.major;
+
+    if(capability)
+    {
+        cudaGetDeviceProperties( &p, 0);
+        printf(" -- Information & Properties about CUDA device 0 -- \n");
+        printf("\tCompute Capability: %i.%i\n", p.major, p.minor);
+        printf("\tDevice Name: %s\n", p.name);
+        printf("\tClock Rate: %d\n", p.clockRate);
+        printf("\tGlobal Memory: %dMiB\n", p.totalGlobalMem/(1024*1024));
+        printf(" -- End of Information -- \n");
+    }else
+    {
+        printf(" -- Warning: No CUDA Device Detected :'( -- \n");
+    }
+
+
 }
 
 // Let's do a basic CAESAR shift cipher, implemented in CUDA
