@@ -18,17 +18,25 @@ int main( void ){
 
     char *dev_key, *dev_text;
 
-    cudaMalloc( (void**)&dev_key, strlen(key)*sizeof(char));
-    cudaMalloc( (void**)&dev_text, strlen(text)*sizeof(char));
+    int textSize =(strlen(text) * sizeof(char))+1;
+    int keySize = (strlen(key) * sizeof(char))+1;
 
-    cudaMemcpy( dev_key, key, strlen(key)*sizeof(char), cudaMemcpyHostToDevice);
-    cudaMemcpy( dev_text, text, (strlen(text)+1)*sizeof(char), cudaMemcpyHostToDevice);
-    printf("Key: %s(%d)\nText: '%s'(%d)\n", key, strlen(key), text, strlen(text));
-    caesarCipher<<<1024, 1>>>(dev_key, dev_text, strlen(text), strlen(key));
+    cudaMalloc( (void**)&dev_key, textSize);
+    cudaMalloc( (void**)&dev_text, textSize);
 
-    cudaMemcpy(text, dev_text, (strlen(text)+1)*sizeof(char), cudaMemcpyDeviceToHost);
+    cudaMemcpy( dev_key, key, keySize, cudaMemcpyHostToDevice);
+    cudaMemcpy( dev_text, text, textSize, cudaMemcpyHostToDevice);
 
-    printf("Output: %s\n", text);
+    //printf("%i %i %i\n", (int)sizeof(text), (strlen(text)+1)*sizeof(char), (strlen(text))*sizeof(char));
+
+    printf("Key: %s(%d)\nText: '%s'(%d)\n", key, keySize, text,textSize);
+    caesarCipher<<<textSize, 1>>>(dev_key, dev_text, keySize, keySize);
+
+
+    char * result = (char *)malloc(textSize);
+    cudaMemcpy(result, dev_text, textSize, cudaMemcpyDeviceToHost);
+
+    printf("Output: %s\n", result);
 
     cudaFree(dev_text);
     cudaFree(dev_key);
@@ -42,9 +50,10 @@ __global__ void caesarCipher(char *key, char *text, int tlength, int klength)
     int tid = blockIdx.x;
     if (tid < tlength)
     {
-        printf("%c - %d\n",text[tid], tid);
-        (char*)text[tid] = ((int)text[tid] + (int)key[tid % klength])%127;
-        printf("%c - %d\n",text[tid], tid);
+        printf("%i says - %s\n", tid, text);
+        //char t = text[tid];
+        text[tid] = ((int)text[tid] + (int)key[tid % klength])%127;
+        //printf("%c -> %c - %d\n",t,text[tid], tid);
     }
 
 }
@@ -65,12 +74,13 @@ void getInfo( void )
     }else
     {
         printf(" -- Warning: No CUDA Device Detected :'( -- \n");
-        printf(" -- This software might not operate as   -- \n -- Expected.                            -- \n")
+        printf(" -- This software might not operate as   -- \n -- Expected.                            -- \n");
     }
 }
 
 bool getDevicePresent( void )
 {
     cudaDeviceProp p;
+    cudaGetDeviceProperties( &p, 0);
     return (p.major != 0);
 }
