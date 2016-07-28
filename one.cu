@@ -3,6 +3,7 @@
 
 
 void getInfo( void );
+bool getDevicePresent( void );
 
 // Let's do a basic CAESAR shift cipher, implemented in CUDA
 __global__ void caesarCipher(char *key, char *text, int tlength, int klength);
@@ -52,9 +53,7 @@ void getInfo( void )
 {
     cudaDeviceProp p;
 
-    int capability = p.major;
-
-    if(capability)
+    if(getDevicePresent())
     {
         cudaGetDeviceProperties( &p, 0);
         printf(" -- Information & Properties about CUDA device 0 -- \n\n");
@@ -68,6 +67,10 @@ void getInfo( void )
         printf(" -- Warning: No CUDA Device Detected :'( -- \n");
         printf(" -- This software might not operate as   -- \n -- Expected.                            -- \n")
     }
+}
 
-
+bool getDevicePresent( void )
+{
+    cudaDeviceProp p;
+    return (p.major != 0);
 }
