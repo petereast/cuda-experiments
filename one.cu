@@ -1,3 +1,7 @@
+// This turned out to be a little more complex than I had first thought, maybe I should try a different project.
+//
+
+
 #include <iostream>
 #include <stdio.h>
 
@@ -7,13 +11,19 @@ bool getDevicePresent( void );
 
 // Let's do a basic CAESAR shift cipher, implemented in CUDA
 __global__ void caesarCipher(char *key, char *text, int tlength, int klength);
+__global__ void unCaesarCipher(char *key, char *text, int tlength, int klength);
 
 
 int main( void ){
 
     getInfo();
 
-    char *key = "Hellfo";
+    if(!getDevicePresent())
+    {
+        return -1;
+    }
+
+    char *key = "fsdbikjb";
     char *text = "The Quick Brown Fox Jumped over The Lazy Dawg";
 
     char *dev_key, *dev_text;
@@ -30,16 +40,30 @@ int main( void ){
     //printf("%i %i %i\n", (int)sizeof(text), (strlen(text)+1)*sizeof(char), (strlen(text))*sizeof(char));
 
     printf("Key: %s(%d)\nText: '%s'(%d)\n", key, keySize, text,textSize);
-    caesarCipher<<<textSize, 1>>>(dev_key, dev_text, keySize, keySize);
+    caesarCipher<<<textSize, 1>>>(dev_key, dev_text, textSize, keySize);
 
 
     char * result = (char *)malloc(textSize);
     cudaMemcpy(result, dev_text, textSize, cudaMemcpyDeviceToHost);
 
-    printf("Output: %s\n", result);
+    printf("Output:");
+    printf(" '%s'\n", result);
+    printf("Length: %i", strlen(result));
+
+    unCaesarCipher<<<textSize, 1>>>(dev_key, dev_text, textSize, keySize);
+
+    cudaMemcpy(result, dev_text, textSize, cudaMemcpyDeviceToHost);
+
+    printf("Output:");
+    printf(" '%s'\n", result);
+    printf("Length: %i", strlen(result));
+
+
+    printf("Clearing Memory...\n");
 
     cudaFree(dev_text);
     cudaFree(dev_key);
+    free(result);
 
 
     return 0;
@@ -50,10 +74,23 @@ __global__ void caesarCipher(char *key, char *text, int tlength, int klength)
     int tid = blockIdx.x;
     if (tid < tlength)
     {
-        printf("%i says - %s\n", tid, text);
-        //char t = text[tid];
+        //printf("%i says - %s\n", tid, text);
+        char t = text[tid];
         text[tid] = ((int)text[tid] + (int)key[tid % klength])%127;
-        //printf("%c -> %c - %d\n",t,text[tid], tid);
+        printf("%c -> %c - %d\n",t,text[tid], tid);
+    }
+
+}
+
+__global__ void unCaesarCipher(char *key, char *text, int tlength, int klength)
+{
+    int tid = blockIdx.x;
+    if (tid < tlength)
+    {
+        //printf("%i says - %s\n", tid, text);
+        char t = text[tid];
+        text[tid] = ((int)text[tid] - (int)key[tid % klength])%127;
+        printf("%c -> %c - %d\n",t,text[tid], tid);
     }
 
 }
